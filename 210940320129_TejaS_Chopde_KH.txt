@@ -1,0 +1,124 @@
+ProductController.cs
+
+using DotNetExam.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace Question1.Controllers
+{
+    public class ProductController : Controller
+    {
+
+        // GET: Products/Edit/5
+        public ActionResult Edit(int id)
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=JkJan22;Integrated Security=True;";
+            cn.Open();
+
+            SqlCommand cmdEdit = new SqlCommand();
+            cmdEdit.Connection = cn;
+            /*cmdEdit.CommandType = System.Data.CommandType.Text;
+            cmdEdit.CommandText = "select * from Products where ProductId=@Id";*/
+
+            cmdEdit.CommandType = System.Data.CommandType.StoredProcedure;
+            cmdEdit.CommandText = "Edit1Procedure";
+            cmdEdit.Parameters.AddWithValue("@Id", id);
+
+            SqlDataReader dr = cmdEdit.ExecuteReader();
+            Products product = null;
+
+            try
+            {
+                while (dr.Read())
+                {
+                    product = new Products { ProductId = (int)dr["ProductId"], ProductName = (string)dr["ProductName"], Rate = (decimal)dr["Rate"], Description = (string)dr["Description"], CategoryName = (string)dr["CategoryName"] };
+                }
+                dr.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                cn.Close();
+            }
+            return View(product);
+        }
+
+        // POST: Products/Edit/5
+        [HttpPost]
+        public ActionResult Edit(int id, Products product)
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=JkJan22;Integrated Security=True;";
+            cn.Open();
+
+            SqlCommand cmdEdit = new SqlCommand();
+            cmdEdit.Connection = cn;
+            cmdEdit.CommandType = System.Data.CommandType.Text;
+            cmdEdit.CommandText = "update Products set ProductName=@ProductName,Rate=@Rate,Description=@Description,CategoryName=@CategoryName where ProductId=@Id";
+            cmdEdit.Parameters.AddWithValue("@Id", id);
+            cmdEdit.Parameters.AddWithValue("@ProductName", product.ProductName);
+            cmdEdit.Parameters.AddWithValue("@Rate", product.Rate);
+            cmdEdit.Parameters.AddWithValue("@Description", product.Description);
+            cmdEdit.Parameters.AddWithValue("@CategoryName", product.CategoryName);
+            try
+            {
+                cmdEdit.ExecuteNonQuery();
+                return RedirectToAction("Index");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            cn.Close();
+            return View();
+        }
+    }
+}
+
+
+**********************************************************************
+
+Products.cs
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Web;
+
+namespace DotNetExam.Models
+{
+    public class Products
+    {
+        [Key]
+        public int ProductId { get; set; }
+
+        [DataType(DataType.Text)]
+        [Required(ErrorMessage = "Please Enter A Valid Product Name!")]
+        public string ProductName { get; set; }
+
+        [Required(ErrorMessage = "Please Enter A Valid Rate!")]
+        public decimal Rate { get; set; }
+
+        [DataType(DataType.Text)]
+        [Required(ErrorMessage = "Please Enter A Product Description!")]
+        public string Description { get; set; }
+
+        [DataType(DataType.Text)]
+        [Required(ErrorMessage = "Please Enter A Category Name!")]
+        public string CategoryName { get; set; }
+    }
+}
+
+**********************************************************************
+
+
+
